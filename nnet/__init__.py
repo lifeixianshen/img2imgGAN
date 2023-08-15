@@ -142,7 +142,7 @@ class Model(object):
       def train_mode():
          """Noise to be set during training mode"""
          input_noise = None
-         if self.opts.model == 'cvae-gan' or self.opts.model == 'bicycle':
+         if self.opts.model in ['cvae-gan', 'bicycle']:
             input_noise = self.E_mean + self.code * self.E_std
          elif self.opts.model == 'clr-gan':
             input_noise = self.code
@@ -242,21 +242,35 @@ class Model(object):
       except KeyError:
          raise KeyError("No such non-linearity is available!")
       for idx in range(1, num_layers):
-         input_layer = self.e_layers['conv{}'.format(idx-1)]
+         input_layer = self.e_layers[f'conv{idx - 1}']
          factor = min(2**idx, 4)
          if not norm:
-            self.e_layers['conv{}'.format(idx)] = conv2d(input_layer, ksize=k,
-               out_channels=kernels*factor, stride=s, name='conv{}'.format(idx),
-               non_lin=self.non_lin[non_lin], reuse=reuse)
+            self.e_layers[f'conv{idx}'] = conv2d(
+                input_layer,
+                ksize=k,
+                out_channels=kernels * factor,
+                stride=s,
+                name=f'conv{idx}',
+                non_lin=self.non_lin[non_lin],
+                reuse=reuse,
+            )
          else:
-            self.e_layers['conv{}'.format(idx)] = conv_bn_lrelu(input_layer, ksize=k,
-               out_channels=kernels*factor, is_training=self.is_training, stride=s,
-               name='conv{}'.format(idx), reuse=reuse)
+            self.e_layers[f'conv{idx}'] = conv_bn_lrelu(
+                input_layer,
+                ksize=k,
+                out_channels=kernels * factor,
+                is_training=self.is_training,
+                stride=s,
+                name=f'conv{idx}',
+                reuse=reuse,
+            )
          if not self.opts.full_summaries:
-            activation_summary(self.e_layers['conv{}'.format(idx)])
+            activation_summary(self.e_layers[f'conv{idx}'])
 
-      self.e_layers['pool'] = average_pool(self.e_layers['conv{}'.format(num_layers-1)],
-         ksize=8, stride=8, name='pool')
+      self.e_layers['pool'] = average_pool(self.e_layers[f'conv{num_layers - 1}'],
+                                           ksize=8,
+                                           stride=8,
+                                           name='pool')
       if not self.opts.full_summaries:
          activation_summary(self.e_layers['pool'])
 
@@ -286,15 +300,22 @@ class Model(object):
 
       # Add residual blocks
       for idx in xrange(1, num_blocks):
-        factor = min(idx+1, 4)
-        self.e_layers['block_{}'.format(idx)] = residual_block_v2(input_layer,
-             out_channels=[input_channels, kernels*factor], is_training=self.is_training,
-             name='block_{}'.format(idx), reuse=reuse)
-        input_layer = self.e_layers['block_{}'.format(idx)]
-        input_channels = self.e_layers['block_{}'.format(idx)].get_shape().as_list()[-1]
+         factor = min(idx+1, 4)
+         self.e_layers[f'block_{idx}'] = residual_block_v2(
+             input_layer,
+             out_channels=[input_channels, kernels * factor],
+             is_training=self.is_training,
+             name=f'block_{idx}',
+             reuse=reuse,
+         )
+         input_layer = self.e_layers[f'block_{idx}']
+         input_channels = self.e_layers[f'block_{idx}'].get_shape().as_list()[-1]
 
-      self.e_layers['pool'] = average_pool(self.e_layers['block_{}'.format(num_blocks-1)],
-         ksize=8, stride=8, name='pool')
+      self.e_layers['pool'] = average_pool(
+          self.e_layers[f'block_{num_blocks - 1}'],
+          ksize=8,
+          stride=8,
+          name='pool')
       if not self.opts.full_summaries:
          activation_summary(self.e_layers['pool'])
 
@@ -457,33 +478,63 @@ class Model(object):
       self.d_layers['conv0'] = conv2d(image, ksize=k, out_channels=kernels*1, stride=s, name='conv0',
             non_lin=self.non_lin[non_lin], reuse=reuse)
       for idx in range(1, num_layers):
-         input_layer = self.d_layers['conv{}'.format(idx-1)]
+         input_layer = self.d_layers[f'conv{idx - 1}']
          factor = min(2**idx, 8)
          if not norm:
-            self.d_layers['conv{}'.format(idx)] = conv2d(input_layer, ksize=k,
-               out_channels=kernels*factor, stride=s, name='conv{}'.format(idx),
-               non_lin=self.non_lin[non_lin], reuse=reuse)
+            self.d_layers[f'conv{idx}'] = conv2d(
+                input_layer,
+                ksize=k,
+                out_channels=kernels * factor,
+                stride=s,
+                name=f'conv{idx}',
+                non_lin=self.non_lin[non_lin],
+                reuse=reuse,
+            )
          else:
-            self.d_layers['conv{}'.format(idx)] = conv_bn_lrelu(input_layer, ksize=k,
-               out_channels=kernels*factor, is_training=self.is_training, stride=s,
-               name='conv{}'.format(idx), reuse=reuse)
+            self.d_layers[f'conv{idx}'] = conv_bn_lrelu(
+                input_layer,
+                ksize=k,
+                out_channels=kernels * factor,
+                is_training=self.is_training,
+                stride=s,
+                name=f'conv{idx}',
+                reuse=reuse,
+            )
 
-      input_layer = self.d_layers['conv{}'.format(num_layers-1)]
+      input_layer = self.d_layers[f'conv{num_layers - 1}']
       factor = min(2**num_layers, 8)
       if not norm:
-         self.d_layers['conv{}'.format(num_layers)] = conv2d(input_layer, ksize=k, out_channels=
-            kernels*factor, stride=s, name='conv{}'.format(num_layers), non_lin=self.non_lin[non_lin],
-            reuse=reuse)
+         self.d_layers[f'conv{num_layers}'] = conv2d(
+             input_layer,
+             ksize=k,
+             out_channels=kernels * factor,
+             stride=s,
+             name=f'conv{num_layers}',
+             non_lin=self.non_lin[non_lin],
+             reuse=reuse,
+         )
       else:
-         self.d_layers['conv{}'.format(num_layers)] = conv_bn_lrelu(input_layer, ksize=k,
-            out_channels=kernels*factor, is_training=self.is_training, stride=s,
-            name='conv{}'.format(num_layers), reuse=reuse)
+         self.d_layers[f'conv{num_layers}'] = conv_bn_lrelu(
+             input_layer,
+             ksize=k,
+             out_channels=kernels * factor,
+             is_training=self.is_training,
+             stride=s,
+             name=f'conv{num_layers}',
+             reuse=reuse,
+         )
 
-      input_layer = self.d_layers['conv{}'.format(num_layers)]
-      self.d_layers['conv{}'.format(num_layers+1)] = conv2d(input_layer, ksize=k, out_channels=1, 
-         stride=s, name='conv{}'.format(num_layers+1), reuse=reuse)
+      input_layer = self.d_layers[f'conv{num_layers}']
+      self.d_layers[f'conv{num_layers + 1}'] = conv2d(
+          input_layer,
+          ksize=k,
+          out_channels=1,
+          stride=s,
+          name=f'conv{num_layers + 1}',
+          reuse=reuse,
+      )
 
-      logits = self.d_layers['conv{}'.format(num_layers+1)]
+      logits = self.d_layers[f'conv{num_layers + 1}']
       return sigmoid(logits), logits
 
 

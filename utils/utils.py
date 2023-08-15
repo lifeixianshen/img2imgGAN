@@ -30,10 +30,10 @@ def create_rundirs(flags, id):
       flags: Flags
       id   : index of the run
    """
-   os.makedirs(os.path.join(flags.sample_dir, 'Run_{}'.format(id)))
-   os.makedirs(os.path.join(flags.summary_dir, 'Run_{}'.format(id)))
-   flags.summary_dir = os.path.join(flags.summary_dir, 'Run_{}'.format(id))
-   flags.sample_dir = os.path.join(flags.sample_dir, 'Run_{}'.format(id))
+   os.makedirs(os.path.join(flags.sample_dir, f'Run_{id}'))
+   os.makedirs(os.path.join(flags.summary_dir, f'Run_{id}'))
+   flags.summary_dir = os.path.join(flags.summary_dir, f'Run_{id}')
+   flags.sample_dir = os.path.join(flags.sample_dir, f'Run_{id}')
 
 def dump_model_params(flags):
    """Writes model params to a file
@@ -60,8 +60,7 @@ def imread(img_path):
    Args:
       img_path: Path of the image
    """
-   img = io.imread(img_path)
-   return img
+   return io.imread(img_path)
 
 def imwrite(image_path, images, inv_normalize=False):
    """Writes images to a file
@@ -73,12 +72,12 @@ def imwrite(image_path, images, inv_normalize=False):
                      writing to the file
    """
    try:
-      imsave(image_path+'.png', images)
+      imsave(f'{image_path}.png', images)
    except:
       for idx, img in enumerate(images):
          if inv_normalize:
             img = inverse_normalize_images(img)
-         imsave(image_path+'_{}.png'.format(idx), img)
+         imsave(f'{image_path}_{idx}.png', img)
 
 def normalize_images(images):
    """Normalizes images into the range [-1, 1]
@@ -102,9 +101,7 @@ def path_exists(path):
    Args:
       path: path to check
    """
-   if os.path.exists(path):
-      return True
-   return False
+   return bool(os.path.exists(path))
 
 def log_config(idx, flags):
    """Writes the initial hyperparameters to a file
@@ -132,7 +129,7 @@ def read_file_lines(file_name, split_card=None):
    try:
       f = open(file_name, 'r')
    except IOError:
-      raise IOError("Cannot open the file {}".format(file_name))
+      raise IOError(f"Cannot open the file {file_name}")
    lines = f.readlines()
    lines = [line.strip() for line in lines]
    if split_card is not None:

@@ -9,10 +9,10 @@ from scipy.misc import imsave
 
 import utils
 
-checker = lambda dir, data, dtype: True if os.path.exists(os.path.join(
-                            dir, data, '{}.npy'.format(dtype))) else False
-loader  = lambda dir, data, dtype: np.load(os.path.join(dir, data,
-                            '{}.npy'.format(dtype)))
+checker = lambda dir, data, dtype: bool(
+    os.path.exists(os.path.join(dir, data, f'{dtype}.npy')))
+loader = lambda dir, data, dtype: np.load(
+    os.path.join(dir, data, f'{dtype}.npy'))
 
 class Dataset(object):
    """Helper class for the dataset pipeline

@@ -21,9 +21,7 @@ def weight_init(shape, name=None,
    if name is None:
       name='W'
 
-   W = tf.get_variable(name=name, shape=shape,
-      initializer=initializer)
-   return W 
+   return tf.get_variable(name=name, shape=shape, initializer=initializer) 
 
 
 def bias_init(shape, name=None, constant=0.0):
@@ -40,15 +38,15 @@ def bias_init(shape, name=None, constant=0.0):
    if name is None:
       name='b'
 
-   b = tf.get_variable(name=name, shape=shape,
-      initializer=tf.constant_initializer(constant))
-   return b
+   return tf.get_variable(name=name,
+                          shape=shape,
+                          initializer=tf.constant_initializer(constant))
 
 
 def conv2d(input, ksize, out_channels, stride=1, name=None,
            reuse=False, 
            initializer=tf.contrib.layers.xavier_initializer(),
-           bias_constant=0.01, non_lin=None):   
+           bias_constant=0.01, non_lin=None):
    """2D convolution layer
 
    Args:
@@ -77,10 +75,7 @@ def conv2d(input, ksize, out_channels, stride=1, name=None,
       strides=[1, stride, stride, 1]
       output = tf.nn.conv2d(input=input, filter=W, strides=strides, padding='SAME')
       output = output + b
-      if non_lin is None:
-         return output
-      else:
-         return non_lin(output)
+      return output if non_lin is None else non_lin(output)
 
 def deconv(input, ksize, out_shape, out_channels, batch_size,
            stride=1, name=None, reuse=False, 
@@ -118,10 +113,7 @@ def deconv(input, ksize, out_shape, out_channels, batch_size,
       output = tf.nn.conv2d_transpose(value=input, filter=W,
          output_shape=output_shape, strides=strides)
       output = output + b
-      if non_lin is None:
-         return output
-      else:
-         return non_lin(output)
+      return output if non_lin is None else non_lin(output)
 
 def max_pool(input, kernel=3, stride=2, name=None):
    """Max-pool
@@ -141,9 +133,10 @@ def max_pool(input, kernel=3, stride=2, name=None):
    with tf.variable_scope(name):
       ksize = [1, kernel, kernel, 1]
       strides = [1, stride, stride, 1]
-      output = tf.nn.max_pool(input, ksize=ksize, strides=strides,
-         padding='SAME')
-      return output
+      return tf.nn.max_pool(input,
+                            ksize=ksize,
+                            strides=strides,
+                            padding='SAME')
 
 def average_pool(input, ksize=3, stride=3, padding='VALID', name=None):
    """Average Pooling layer
@@ -164,9 +157,10 @@ def average_pool(input, ksize=3, stride=3, padding='VALID', name=None):
    with tf.variable_scope(name):
       ksize = [1, ksize, ksize, 1]
       strides = [1, stride, stride, 1]
-      output = tf.nn.avg_pool(input, ksize=ksize, strides=strides,
-         padding=padding)
-      return output
+      return tf.nn.avg_pool(input,
+                            ksize=ksize,
+                            strides=strides,
+                            padding=padding)
 
 def fully_connected(input, output_neurons, name=None, reuse=False,
                     bias_constant=0.01,
@@ -196,10 +190,7 @@ def fully_connected(input, output_neurons, name=None, reuse=False,
       b = bias_init([output_neurons], 'b', bias_constant)
 
       output = tf.add(tf.matmul(input, W), b)
-      if non_lin is None:
-         return output
-      else:
-         return non_lin(output)
+      return output if non_lin is None else non_lin(output)
 
 
 def dropout_layer(input, keep_prob=0.5, name=None):
@@ -217,8 +208,7 @@ def dropout_layer(input, keep_prob=0.5, name=None):
       name='Dropout'
 
    with tf.variable_scope(name):
-      output = tf.nn.dropout(input, keep_prob=keep_prob)
-      return output
+      return tf.nn.dropout(input, keep_prob=keep_prob)
 
 def relu(input, name=None):
    """ReLU activation
@@ -301,13 +291,14 @@ def batch_normalize(input, is_training, reuse=False, name=None):
       name = "BatchNorm"
 
    with tf.variable_scope(name, reuse=reuse):
-      output = tf.contrib.layers.batch_norm(inputs=input,
-                                            center=True,
-                                            scale=True,
-                                            is_training=is_training,
-                                            updates_collections=None,
-                                            scope=name)
-      return output
+      return tf.contrib.layers.batch_norm(
+          inputs=input,
+          center=True,
+          scale=True,
+          is_training=is_training,
+          updates_collections=None,
+          scope=name,
+      )
 
 
 def conv_bnorm(input, ksize, out_channels, is_training, stride=1,
@@ -332,8 +323,7 @@ def conv_bnorm(input, ksize, out_channels, is_training, stride=1,
    """
    with tf.variable_scope(name, reuse=reuse):
       conv_ac = conv2d(input, ksize, out_channels, stride, name, reuse)
-      conv_bn = batch_normalize(conv_ac, is_training, reuse=reuse)
-      return conv_bn
+      return batch_normalize(conv_ac, is_training, reuse=reuse)
 
 
 def conv_bn_relu(input, ksize, out_channels, is_training, stride=1,
@@ -359,8 +349,7 @@ def conv_bn_relu(input, ksize, out_channels, is_training, stride=1,
    with tf.variable_scope(name, reuse=reuse):
       conv_ac = conv2d(input, ksize, out_channels, stride, name, reuse)
       conv_bn = batch_normalize(conv_ac, is_training, reuse=reuse)
-      conv_rl = relu(conv_bn)
-      return conv_rl
+      return relu(conv_bn)
 
 
 def conv_bn_lrelu(input, ksize, out_channels, is_training, stride=1,
@@ -386,8 +375,7 @@ def conv_bn_lrelu(input, ksize, out_channels, is_training, stride=1,
    with tf.variable_scope(name, reuse=reuse):
       conv_ac = conv2d(input, ksize, out_channels, stride, name, reuse)
       conv_bn = batch_normalize(conv_ac, is_training, reuse=reuse)
-      conv_rl = lrelu(conv_bn)
-      return conv_rl
+      return lrelu(conv_bn)
 
 
 def bn_relu_conv(input, ksize, out_channels, is_training, stride=1,
@@ -413,8 +401,7 @@ def bn_relu_conv(input, ksize, out_channels, is_training, stride=1,
    with tf.variable_scope(name, reuse=reuse):
       conv_bn = batch_normalize(input, is_training, reuse=reuse)
       conv_rl = relu(conv_bn)
-      conv_ac = conv2d(conv_rl, ksize, out_channels, stride, name, reuse)
-      return conv_ac
+      return conv2d(conv_rl, ksize, out_channels, stride, name, reuse)
 
 
 def bn_lrelu_conv(input, ksize, out_channels, is_training, stride=1,
@@ -440,8 +427,7 @@ def bn_lrelu_conv(input, ksize, out_channels, is_training, stride=1,
    with tf.variable_scope(name, reuse=reuse):
       conv_bn = batch_normalize(input, is_training, reuse=reuse)
       conv_rl = lrelu(conv_bn)
-      conv_ac = conv2d(conv_rl, ksize, out_channels, stride, name, reuse)
-      return conv_ac
+      return conv2d(conv_rl, ksize, out_channels, stride, name, reuse)
 
 
 def dconv_bn_relu(input, ksize, out_channels, out_shape, is_training,
@@ -471,8 +457,7 @@ def dconv_bn_relu(input, ksize, out_channels, out_shape, is_training,
                        out_channels=out_channels, stride=stride,
                        name=name, reuse=reuse, batch_size=batch_size)
       conv_bn = batch_normalize(conv_ac, is_training, reuse=reuse)
-      conv_rl = relu(conv_bn)
-      return conv_rl
+      return relu(conv_bn)
 
 
 def dconv_bn_lrelu(input, ksize, out_channels, out_shape, is_training,
@@ -502,8 +487,7 @@ def dconv_bn_lrelu(input, ksize, out_channels, out_shape, is_training,
                        out_channels=out_channels, stride=stride,
                        name=name, reuse=reuse, batch_size=batch_size)
       conv_bn = batch_normalize(conv_ac, is_training, reuse=reuse)
-      conv_rl = lrelu(conv_bn)
-      return conv_rl
+      return lrelu(conv_bn)
 
 
 def residual_block_v1(input, out_channels, is_training, stride=1,
@@ -587,9 +571,9 @@ def residual_block_v1(input, out_channels, is_training, stride=1,
                                     reuse=reuse)
 
       if shortcut is None:
-         output = add_layers(input, conv3_bn, name=name+'_add')
+         output = add_layers(input, conv3_bn, name=f'{name}_add')
       else:
-         output = add_layers(shortcut, conv3_bn, name=name+'_add')
+         output = add_layers(shortcut, conv3_bn, name=f'{name}_add')
 
       output = relu(output)
       return output
@@ -635,7 +619,7 @@ def residual_block_v2(input, out_channels, is_training, stride=1,
                            name='conv2', reuse=reuse)
       # AveragePool
       pool1 = average_pool(conv2, ksize=2, stride=2)
-      output = add_layers(short_conv, pool1, name=name+'_add')
+      output = add_layers(short_conv, pool1, name=f'{name}_add')
       output = relu(output)
 
       return output
@@ -679,9 +663,8 @@ def activation_summary(tensor, collection='hist_spar'):
    """
    tensor_name = tensor.op.name
    with tf.variable_scope('summaries'):
-      hist_summary = tf.summary.histogram(tensor_name+'_activation',
-                                          tensor)
-      spar_summary = tf.summary.scalar(tensor_name+'_sparsity',
+      hist_summary = tf.summary.histogram(f'{tensor_name}_activation', tensor)
+      spar_summary = tf.summary.scalar(f'{tensor_name}_sparsity',
                                        tf.nn.zero_fraction(tensor))
 
    tf.add_to_collection(collection, hist_summary)
